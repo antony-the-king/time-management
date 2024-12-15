@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow Pro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <i class="fas fa-layer-group"></i>
+        <h1>TaskFlow Pro</h1>
+      </div>
+
+      <nav>
+        <h2>VIEWS</h2>
+        <ul class="nav-links">
+          <li class="active" data-view="board">
+            <i class="fas fa-th-large"></i>
+            Task Board
+          </li>
+          <li data-view="calendar">
+            <i class="fas fa-calendar-week"></i>
+            Calendar
+          </li>
+          <li data-view="statistics">
+            <i class="fas fa-chart-line"></i>
+            Statistics
+          </li>
+        </ul>
+
+        <h2>FILTERS</h2>
+        <ul class="filter-links">
+          <li data-filter="all">
+            <i class="fas fa-border-all"></i>
+            All Tasks
+          </li>
+          <li data-filter="today">
+            <i class="fas fa-sun"></i>
+            Today
+          </li>
+          <li data-filter="upcoming">
+            <i class="fas fa-hourglass-half"></i>
+            Upcoming
+          </li>
+        </ul>
+
+        <h2>CATEGORIES</h2>
+        <ul class="category-links" id="category-list">
+          <!-- Categories will be dynamically added here -->
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="settings-btn" class="sidebar-btn">
+          <i class="fas fa-sliders-h"></i>
+          Settings
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <div class="main-header">
+        <div class="search-and-add">
+          <div class="search-bar">
+            <i class="fas fa-search-plus"></i>
+            <input type="text" placeholder="Search tasks...">
+          </div>
+          <button class="new-task-btn">
+            <i class="fas fa-plus-circle"></i>
+            New Task
+          </button>
+        </div>
+        
+        <div class="timer-container">
+          <span class="timer-display"></span>
+        </div>
+        
+        <button class="notification-btn">
+          <i class="fas fa-bell-plus"></i>
+          <span class="notification-badge"></span>
+        </button>
+      </div>
+
+      <!-- Task Board -->
+      <div id="board" class="task-board view active">
+        <div class="board-header">
+          <h2>Task Board</h2>
+          <select class="sort-dropdown">
+            <option value="deadline">Sort by Deadline</option>
+            <option value="priority">Sort by Priority</option>
+            <option value="name">Sort by Name</option>
+          </select>
+        </div>
+
+        <div class="task-columns">
+          <div class="task-column">
+            <div class="column-header">
+              <h3>Todo</h3>
+              <span class="task-count">0</span>
+            </div>
+            <div class="column-content">
+              <!-- Tasks will be dynamically added here -->
+            </div>
+          </div>
+
+          <div class="task-column">
+            <div class="column-header">
+              <h3>In-Progress</h3>
+              <span class="task-count">0</span>
+            </div>
+            <div class="column-content">
+              <!-- Tasks will be dynamically added here -->
+            </div>
+          </div>
+
+          <div class="task-column">
+            <div class="column-header">
+              <h3>Completed</h3>
+              <span class="task-count">0</span>
+            </div>
+            <div class="column-content">
+              <!-- Tasks will be dynamically added here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Completion Rate -->
+      <div class="task-completion-rate">
+        <span>Task Completion</span>
+        <div class="completion-progress">
+          <div class="completion-fill" style="width: 65%;"></div>
+        </div>
+        <span>65%</span>
+      </div>
+    </main>
+
+    <!-- Right Panel -->
+    <aside class="right-panel">
+      <div class="panel-header">
+        <h3>Task Details</h3>
+        <button class="close-panel">
+          <i class="fas fa-times-circle"></i>
+        </button>
+      </div>
+      <div class="panel-content">
+        <!-- Task details will be shown here -->
+      </div>
+    </aside>
+
+    <!-- Task Modal -->
+    <div id="task-modal" class="task-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create New Task</h3>
+          <button class="close-modal">
+            <i class="fas fa-times-circle"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form class="task-form">
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-tasks"></i>
+                Task Name
+              </label>
+              <input type="text" class="form-input" id="task-name" placeholder="Enter task name" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-calendar"></i>
+                  Due Date
+                </label>
+                <div class="relative">
+                  <div class="datepicker-toggle">
+                    <input type="text" 
+                           class="form-input datepicker-input" 
+                           id="task-deadline" 
+                           placeholder="Select date"
+                           readonly
+                           required>
+                    <button type="button" class="datepicker-toggle-button">
+                      <i class="fas fa-calendar"></i>
+                    </button>
+                  </div>
+                  <div class="datepicker-popup" id="datepicker-popup">
+                    <div class="datepicker-header">
+                      <button type="button" class="prev-month">
+                        <i class="fas fa-chevron-left"></i>
+                      </button>
+                      <div class="current-month"></div>
+                      <button type="button" class="next-month">
+                        <i class="fas fa-chevron-right"></i>
+                      </button>
+                    </div>
+                    <div class="datepicker-grid">
+                      <div class="datepicker-day-names">
+                        <div>Su</div>
+                        <div>Mo</div>
+                        <div>Tu</div>
+                        <div>We</div>
+                        <div>Th</div>
+                        <div>Fr</div>
+                        <div>Sa</div>
+                      </div>
+                      <div class="datepicker-days"></div>
+                    </div>
+                    <div class="datepicker-time">
+                      <div class="time-inputs">
+                        <input type="number" class="form-input hour-input" min="0" max="23" placeholder="HH">
+                        <span>:</span>
+                        <input type="number" class="form-input minute-input" min="0" max="59" placeholder="MM">
+                      </div>
+                      <div class="time-period">
+                        <button type="button" class="period-btn am active">AM</button>
+                        <button type="button" class="period-btn pm">PM</button>
+                      </div>
+                    </div>
+                    <div class="datepicker-footer">
+                      <button type="button" class="btn btn-secondary clear-btn">Clear</button>
+                      <button type="button" class="btn btn-primary apply-btn">Apply</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-flag"></i>
+                  Priority
+                </label>
+                <select class="form-input" id="task-priority" required>
+                  <option value="low">Low Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="high">High Priority</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-align-left"></i>
+                Description
+              </label>
+              <textarea class="form-input" id="task-description" placeholder="Enter task description" rows="4"></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-tag"></i>
+                  Category
+                </label>
+                <select class="form-input" id="task-category">
+                  <option value="">Select Category</option>
+                  <option value="work">Work</option>
+                  <option value="personal">Personal</option>
+                  <option value="shopping">Shopping</option>
+                  <option value="health">Health</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-clock"></i>
+                  Estimated Time (minutes)
+                </label>
+                <input type="number" class="form-input" id="estimated-time" min="0">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="cancel-task">
+                <i class="fas fa-times"></i>
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" id="save-task">
+                <i class="fas fa-check"></i>
+                Create Task
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
