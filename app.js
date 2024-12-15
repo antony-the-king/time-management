@@ -1,4 +1,4 @@
-// DOM Elements
+// DOM Elements for Time Management App
 const sidebar = document.querySelector('.sidebar');
 const rightPanel = document.querySelector('.right-panel');
 const taskColumns = document.querySelectorAll('.task-column');
