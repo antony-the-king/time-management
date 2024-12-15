@@ -83,10 +83,23 @@
           <span class="timer-display"></span>
         </div>
         
-        <button class="notification-btn">
-          <i class="fas fa-bell-plus"></i>
-          <span class="notification-badge"></span>
-        </button>
+        <div class="notification-container">
+          <button class="notification-btn">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">0</span>
+          </button>
+          <div class="notification-panel">
+            <div class="notification-header">
+              <h3>Notifications</h3>
+              <button class="clear-notifications">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+            <div class="notification-list">
+              <!-- Notifications will be added here dynamically -->
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Task Board -->
@@ -271,9 +284,18 @@
               <div class="form-group">
                 <label class="form-label">
                   <i class="fas fa-clock"></i>
-                  Estimated Time (minutes)
+                  Estimated Time
                 </label>
-                <input type="number" class="form-input" id="estimated-time" min="0">
+                <div class="duration-input">
+                  <input type="number" class="form-input" id="duration-value" min="0" placeholder="Duration">
+                  <select class="form-input" id="duration-unit">
+                    <option value="minutes">Minutes</option>
+                    <option value="hours">Hours</option>
+                    <option value="days">Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                  </select>
+                </div>
               </div>
             </div>
 

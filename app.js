@@ -15,9 +15,73 @@ const taskCounts = document.querySelectorAll('.task-count');
 
 // State Management
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let notifications = [];
 let currentTimer = null;
 let timerRunning = false;
 let workDuration = 25 * 60; // 25 minutes in seconds
+
+// Notification System
+function addNotification(title, type = 'info') {
+    const notification = {
+        id: Date.now(),
+        title,
+        type,
+        time: new Date(),
+        read: false
+    };
+    notifications.unshift(notification);
+    updateNotificationBadge();
+    renderNotifications();
+}
+
+function updateNotificationBadge() {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const badge = document.querySelector('.notification-badge');
+    if (badge) {
+        badge.textContent = unreadCount;
+        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+    }
+}
+
+function renderNotifications() {
+    const notificationList = document.querySelector('.notification-list');
+    if (notificationList) {
+        notificationList.innerHTML = notifications.length === 0 
+            ? '<div class="notification-item">No notifications</div>'
+            : notifications.map(notification => `
+                <div class="notification-item" data-id="${notification.id}">
+                    <div class="icon">
+                        <i class="fas ${getNotificationIcon(notification.type)}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-time">${formatNotificationTime(notification.time)}</div>
+                    </div>
+                </div>
+            `).join('');
+    }
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'info': 'fa-info-circle',
+        'success': 'fa-check-circle',
+        'warning': 'fa-exclamation-circle',
+        'error': 'fa-times-circle'
+    };
+    return icons[type] || icons.info;
+}
+
+function formatNotificationTime(time) {
+    const date = new Date(time);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
+    return date.toLocaleDateString();
+}
 
 // Task Management
 function addTask(taskData) {
@@ -202,7 +266,9 @@ function updateCurrentTime() {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
     const minutes = now.getMinutes().toString().padStart(2, '0');
-    timerDisplay.textContent = `${hours}:${minutes}`;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = hours % 12 || 12; // Convert to 12-hour format
+    timerDisplay.textContent = `${formattedHours}:${minutes} ${ampm}`;
 }
 
 // Update time every minute
@@ -248,6 +314,14 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Loading saved tasks...');
     tasks = JSON.parse(localStorage.getItem('tasks')) || [];
     console.log('Loaded tasks:', tasks);
+
+    // Add a welcome notification
+    addNotification('Welcome to TaskFlow Pro! Start managing your tasks efficiently.', 'info');
+
+    // Check for upcoming deadlines
+    checkDeadlines();
+    // Check deadlines every hour
+    setInterval(checkDeadlines, 3600000);
     
     // Initialize views
     switchView('board');
@@ -265,6 +339,63 @@ document.addEventListener('DOMContentLoaded', () => {
             filterTasks(item.dataset.filter);
         });
     });
+
+    // Initialize notification system
+    const notificationBtn = document.querySelector('.notification-btn');
+    const notificationPanel = document.querySelector('.notification-panel');
+    const clearNotificationsBtn = document.querySelector('.clear-notifications');
+
+    if (notificationBtn && notificationPanel) {
+        notificationBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationPanel.classList.toggle('show');
+            if (notificationPanel.classList.contains('show')) {
+                notifications.forEach(n => n.read = true);
+                updateNotificationBadge();
+            }
+        });
+
+        clearNotificationsBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifications = [];
+            updateNotificationBadge();
+            renderNotifications();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!notificationPanel.contains(e.target) && !notificationBtn.contains(e.target)) {
+                notificationPanel.classList.remove('show');
+            }
+        });
+
+        // Hook into task operations to create notifications
+        const originalAddTask = window.addTask;
+        window.addTask = function(taskData) {
+            originalAddTask(taskData);
+            addNotification(`New task created: ${taskData.title}`, 'success');
+        };
+
+        const originalUpdateTask = window.updateTask;
+        window.updateTask = function(taskId, updates) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task && updates.status && updates.status !== task.status) {
+                addNotification(`Task "${task.title}" moved to ${updates.status}`, 'info');
+            }
+            if (task && updates.progress === 100) {
+                addNotification(`Task "${task.title}" completed!`, 'success');
+            }
+            originalUpdateTask(taskId, updates);
+        };
+
+        const originalDeleteTask = window.deleteTask;
+        window.deleteTask = function(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                addNotification(`Task "${task.title}" deleted`, 'warning');
+            }
+            originalDeleteTask(taskId);
+        };
+    }
     
     renderTasks();
     updateTaskCounts();
@@ -792,6 +923,29 @@ class Datepicker {
 // Initialize datepicker
 const datepicker = new Datepicker(document.getElementById('task-deadline'));
 
+// Check task deadlines and send notifications
+function checkDeadlines() {
+    const now = new Date();
+    tasks.forEach(task => {
+        if (task.deadline && task.status !== 'completed') {
+            const deadline = new Date(task.deadline);
+            const hoursUntilDeadline = (deadline - now) / (1000 * 60 * 60);
+            
+            if (hoursUntilDeadline <= 24 && hoursUntilDeadline > 0) {
+                addNotification(
+                    `Task "${task.title}" is due in ${Math.round(hoursUntilDeadline)} hours!`,
+                    'warning'
+                );
+            } else if (hoursUntilDeadline <= 0) {
+                addNotification(
+                    `Task "${task.title}" is overdue!`,
+                    'error'
+                );
+            }
+        }
+    });
+}
+
 // Duration conversion helpers
 function convertDurationToMinutes(value, unit) {
     const conversions = {
@@ -827,6 +981,12 @@ taskForm.addEventListener('submit', (e) => {
     const category = document.getElementById('task-category').value;
     const durationValue = document.getElementById('duration-value')?.value || 0;
     const durationUnit = document.getElementById('duration-unit')?.value || 'minutes';
+    
+    // Validate duration
+    if (durationValue < 0) {
+        alert('Duration cannot be negative');
+        return;
+    }
     
     console.log('Form values:', {
         taskName,
